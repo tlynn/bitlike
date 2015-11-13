@@ -1,4 +1,4 @@
-import simubit as _simubit
+import bitlike.sim as _sim
 import microbit as _microbit
 
 from builtins import print as _print
@@ -15,7 +15,7 @@ def set_pixel(x, y, glow):
     if not isinstance(glow, (int, float)):
         raise TypeError()
     _pixels[y][x] = glow
-    _simubit.gui_call('set_pixel', (x, y, glow))
+    _sim.gui_call('set_pixel', (x, y, glow))
 
 
 def get_pixel(x, y):
@@ -25,7 +25,7 @@ def get_pixel(x, y):
 def clear():
     global _pixels
     _pixels = [[0, 0, 0, 0, 0] for i in range(5)]
-    _simubit.gui_call('clear', ())
+    _sim.gui_call('clear', ())
 
 
 def print(msg):

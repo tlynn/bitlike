@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-A very hacky and incomplete micro:bit simulator using Tkinter.
+bitlike, a micro:bit simulator.
 
 See __init__.py for license.
 '''
@@ -9,13 +9,7 @@ import sys
 import os
 import runpy
 
-if 'simubit' not in sys.modules:
-    # Being run with "python simubit ..." rather than "python -m simubit ...".
-    path = os.path.dirname(sys.modules[__name__].__file__)
-    path = os.path.join(path, '..')
-    sys.path.insert(0, path)
-
-from simubit import start_gui, gui_call
+from . import start_gui, gui_call
 
 
 def main():

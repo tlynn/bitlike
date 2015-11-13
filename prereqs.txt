@@ -1,0 +1,4 @@
+# Upgrade pip and wheel first to avoid known issues.
+pip>=7.1.2
+wheel>=0.26.0
+# Upgrading setuptools might be a good idea too, but if it ain't broke...

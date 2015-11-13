@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 '''
-A very hacky and incomplete micro:bit simulator using Tkinter.
+bitlike, a micro:bit simulator.
 
-That's "simulator" as in, it behaves roughly the same, rather than behaving
-actually the same, which I'd call an "emulator".  (Some people prefer to use
-those terms the other way around).  As a result, it can't handle scripts that
-include assembler.
+It doesn't emulate the hardware, it just runs the Python code.
+As a result, it can't handle scripts that include assembler.
 
 This derives bits and pieces from the micro:bit/MicroPython code
 (and should really derive much more), so it is under the same MIT license:
@@ -34,12 +32,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 '''
 
-import os
-import platform
+import copy
+import json
 import queue
-import signal
 import threading
-import tkinter
 
 
 class GUI(threading.Thread):
@@ -47,66 +43,92 @@ class GUI(threading.Thread):
         super().__init__()
         self.q = queue.Queue()
         self.q2 = queue.Queue()
+        # This is really the model, but only the gui is allowed to modify it,
+        # so it's safest to only let the gui read it directly too.
+        self._device_state = {
+            'accelerometer': {
+                'x': 0,
+                'y': 0,
+                'z': 0,
+            },
+            'button_a': {
+                'pressed': False,
+            },
+            'button_b': {
+                'pressed': False,
+            },
+            'display': {
+                'pixels': [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                ],
+            },
+        }
 
     def call(self, op_name, args):
         '''Send a message to the GUI thread and return the response.'''
         self.q.put((op_name, args))
-        return self.q2.get()
+        result = self.q2.get()
+        if op_name == 'quit':
+            self.join()
+        return result
 
     def run(self):
         q, q2 = self.q, self.q2
-        window = tkinter.Tk()
-        window.config(bg='black')
-        pixel_labels = []
-        for y in range(5):
-            row_labels = []
-            for x in range(5):
-                label = tkinter.Label(window, text='  ')
-                label.grid(row=y, column=x)
-                label.config(fg='black', bg='black')
-                row_labels.append(label)
-            pixel_labels.append(row_labels)
+        print(json.dumps(self._device_state))
 
-        def do_queued_calls():
+        def loop_until_quit():
+            # TODO: exceptions
             while True:
                 try:
-                    a = q.get(block=False)
+                    a = q.get(block=True)
                     if a is None:
                         break
                     op, args = a
                     if op == 'quit':
-                        q2.put(window.quit())
+                        q2.put(None)
                         return
                     elif op == 'clear':
-                        for row in pixel_labels:
-                            for label in row:
-                                label.config(bg='black')
+                        pixels = self._device_state['display']['pixels']
+                        for y in range(5):
+                            for x in range(5):
+                                pixels[y][x] = 0
                         q2.put(None)
                     elif op == 'set_pixel':
                         x, y, glow = args
-                        bg = '#%02x0000' % min(255, max(0, int((glow*255)/9.)))
-                        pixel_labels[y][x].config(bg=bg)
+                        pixels = self._device_state['display']['pixels']
+                        pixels[y][x] = int(glow)
+                        print(json.dumps(self._device_state))
+                        q2.put(None)
+                    elif op == 'get_device_state':
+                        q2.put(copy.deepcopy(self._device_state))
+                    elif op == 'update_device_state':
+                        kwargs, = args
+                        self._device_state.update(kwargs)
+                        print(json.dumps(self._device_state))
                         q2.put(None)
                     else:
                         print('Unknown op: %r' % op)
                 except queue.Empty:
                     break
-            window.after(1, do_queued_calls)
 
-        window.after(1, do_queued_calls)
-
-        def on_closing():
-            if platform.system() == 'Windows':
-                os.kill(0, signal.CTRL_C_EVENT)
-            else:
-                os.kill(os.getpid(), signal.SIGINT)
-
-        window.protocol("WM_DELETE_WINDOW", on_closing)
-        window.mainloop()
+        loop_until_quit()
 
 
 _gui = GUI()
 
-# public
+# Public API
+
 start_gui = _gui.start
 gui_call = _gui.call
+
+
+def get_device_state():
+    return gui_call('get_device_state', ())
+
+
+def update_device_state(**kwargs):
+    gui_call('update_device_state', (kwargs,))
