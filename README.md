@@ -6,6 +6,14 @@ It runs in your browser.
 
 [1]: https://github.com/bbcmicrobit/micropython/tree/master/examples
 
+This is not the official Touch Develop simulator, which is described
+[here][2], and is doubtless more capable in every way :-).  In particular, it
+probably emulates the hardware, which is a much more reliable approach.
+
+[2]: https://www.touchdevelop.com/microbit/
+
+This is just a toy.
+
 
 How to install
 --------------
