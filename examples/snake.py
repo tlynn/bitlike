@@ -8,9 +8,8 @@ import microbit
 import random
 
 # "pixels" are the glowing lights on the display (also called "LEDs").
-pixel_names = 'ABCDEFGHIJKLMNOPQRSTUVWXY'
-pixel_name_rows = ['ABCDE', 'FGHIJ', 'KLMNO', 'PQRST', 'UVWXY']
-pixel_positions = {pixel_name: (x, y) for y, row in enumerate(pixel_name_rows)
+pixel_names = ['ABCDE', 'FGHIJ', 'KLMNO', 'PQRST', 'UVWXY']
+pixel_positions = {pixel_name: (x, y) for y, row in enumerate(pixel_names)
                                       for x, pixel_name in enumerate(row)}
 
 glows = [0, 2, 4, 6, 7, 7, 9]  # Brightnesses along the snake, going ->.
