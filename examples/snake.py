@@ -5,6 +5,7 @@ The tail being darker made it more complicated than I expected.
 """
 
 import microbit
+import random
 
 # "pixels" are the glowing lights on the display (also called "LEDs").
 pixel_names = 'ABCDEFGHIJKLMNOPQRSTUVWXY'
@@ -26,7 +27,7 @@ while True:
     if B and not A:
         clockwise = False
     if A and B:
-        clockwise = (microbit.random(2) == 1)
+        clockwise = random.choice([True, False])
 
     # Find where the snake's head (snake[-1]) should move to along the path.
     head_pos = path.index(snake[-1])
